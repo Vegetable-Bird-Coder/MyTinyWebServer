@@ -64,3 +64,10 @@ void WebServer::log_init() {
             Log::get_instance()->init("./ServerLog", m_close_log, 2000, 800000, 0);
     }
 }
+
+void WebServer::sql_pool_init() {
+    m_sql_pool = SqlPool::get_instance();
+    m_sql_pool->init("localhost", m_username, m_password, m_database_name, 3306, m_sql_num, m_close_log);
+
+    users->init_mysql_result(m_sql_pool);
+}

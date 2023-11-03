@@ -34,7 +34,7 @@ class WebServer {
     void trig_mode_init();
     void event_listen();
     void event_loop();
-    】 void timer_init();
+    void timer_init();
     // 连接期间有相应，更新计时器
     void timer_update();
     // conn长时间未响应，需要断开连接
