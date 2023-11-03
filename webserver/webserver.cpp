@@ -71,3 +71,7 @@ void WebServer::sql_pool_init() {
 
     users->init_mysql_result(m_sql_pool);
 }
+
+void WebServer::thread_pool_init() {
+    m_thread_pool = new ThreadPool<HttpConn>(m_actor_model, m_sql_pool, m_thread_num);
+}
