@@ -93,8 +93,8 @@ template <typename T> void ThreadPool<T>::run() {
                     SqlConnRAII sql_conn_raii(&request->sql_conn, m_sql_pool);
                     request->process();
                 } else {
-                    request->timer_flag = true;
-                    request->io_finish = true;
+                    request->timer_flag = true; // 告诉主线程需要启用计时器回调函数
+                    request->io_finish = true; // 告诉主线程IO完成，因为reactor模式下，主线程不知道异步的IO是否成功
                 }
             } else {
                 if (request->write()) {

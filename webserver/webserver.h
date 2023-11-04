@@ -2,8 +2,8 @@
 #define WEBSERVER_H
 
 #include <arpa/inet.h>
-#include <cassert>
 #include <errno.h>
+#include <exception>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
