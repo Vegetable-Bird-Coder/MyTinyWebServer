@@ -39,8 +39,8 @@ class WebServer {
     void timer_update(MyTimer *timer);
     // conn长时间未响应，需要断开连接
     void timer_delete(MyTimer *timer, int sockfd);
-    void deal_connection();
-    void deal_signal(bool &timeout, bool &stop_server);
+    bool deal_connection();
+    bool deal_signal(bool &timeout, bool &stop_server);
     void deal_read(int sockfd);
     void deal_write(int sockfd);
 
@@ -73,6 +73,8 @@ class WebServer {
 
     ConnTimer *users_timer;
     Utils utils;
-}
+};
+
+void cb_func(ConnTimer *user_timer);
 
 #endif

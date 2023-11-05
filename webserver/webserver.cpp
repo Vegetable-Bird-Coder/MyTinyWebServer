@@ -102,7 +102,7 @@ void WebServer::event_listen() {
 
     int flag = 1;
     setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-    ret = bind(m_listenfd, (sturct sockaddr *)&address, sizeof(address));
+    ret = bind(m_listenfd, (struct sockaddr *)&address, sizeof(address));
     if (ret < 0)
         throw std::exception();
     ret = listen(m_listenfd, 5);
@@ -121,18 +121,18 @@ void WebServer::event_listen() {
     ret = socketpair(PF_UNIX, SOCK_STREAM, 0, m_pipefd);
     if (ret == -1)
         throw std::exception();
-    utils.set_nonblock(
+    Utils::setnonblocking(
         m_pipefd[1]); // 计时器到期之类任务没有那么紧急，因此读可以是非阻塞的
-    utils.addfd(m_epollfd, m_pipefd[0], false, 0);
+    Utils::addfd(m_epollfd, m_pipefd[0], false, 0);
 
-    utils.addsig(SIGPIPE, SIG_IGN);
-    utils.addsig(SIGALRM, utils.sig_handler, false);
-    utils.addsig(SIGALRM, utils.sig_hanlder, false);
+    Utils::addsig(SIGPIPE, SIG_IGN);
+    Utils::addsig(SIGALRM, utils.sig_handler, false);
+    Utils::addsig(SIGALRM, utils.sig_handler, false);
 
     alarm(TIMESLOT);
 
-    Utils::u_pipefd = m_pipefd;
-    Utils::u_epollfd = m_epollfd;
+    Utils::m_pipefd = m_pipefd;
+    Utils::m_epollfd = m_epollfd;
 }
 
 void WebServer::timer_init(int connfd, struct sockaddr_in client_address) {
@@ -164,7 +164,7 @@ void WebServer::timer_delete(MyTimer *timer, int sockfd) {
     LOG_INFO("close fd %d", users_timer[sockfd].sockfd);
 }
 
-void WebServer::deal_connection() {
+bool WebServer::deal_connection() {
     struct sockaddr_in client_address;
     socklen_t client_addr_len = sizeof(client_address);
     if (m_listen_trig_mode == 0) { // LT
@@ -174,7 +174,7 @@ void WebServer::deal_connection() {
             LOG_ERROR("%s:errno is:%d", "accept error", errno);
             return false;
         }
-        if (http_conn::m_user_count >= MAX_FD) {
+        if (HttpConn::m_user_count >= MAX_FD) {
             utils.show_error(connfd, "Internal server busy");
             LOG_ERROR("%s", "Internal server busy");
             return false;
@@ -183,14 +183,14 @@ void WebServer::deal_connection() {
     } else {
         while (1) {
             int connfd = accept(m_listenfd, (struct sockaddr *)&client_address,
-                                &client_addrlength);
+                                &client_addr_len);
             if (connfd < 0) {
                 if (errno == EAGAIN || errno == EWOULDBLOCK)
                     return true;
                 LOG_ERROR("%s:errno is:%d", "accept error", errno);
                 break;
             }
-            if (http_conn::m_user_count >= MAX_FD) {
+            if (HttpConn::m_user_count >= MAX_FD) {
                 utils.show_error(connfd, "Internal server busy");
                 LOG_ERROR("%s", "Internal server busy");
                 close(connfd);
@@ -258,7 +258,7 @@ void WebServer::deal_read(int sockfd) {
                      inet_ntoa(users[sockfd].get_address()->sin_addr));
 
             // 若监测到读事件，将该事件放入请求队列
-            m_pool->append(users + sockfd);
+            m_thread_pool->append(users + sockfd);
 
             if (timer) {
                 timer_update(timer);
