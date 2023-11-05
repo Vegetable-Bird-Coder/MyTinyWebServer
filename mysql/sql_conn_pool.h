@@ -18,8 +18,8 @@ class SqlPool {
 
     static SqlPool *get_instance();
 
-    void init(string url, string username, string password, int port,
-              int max_conn, int close_log);
+    void init(string url, string username, string password,
+              string database_name, int port, int max_conn, int close_log);
 
   private:
     SqlPool();
@@ -41,6 +41,14 @@ class SqlPool {
     int m_close_log;
 };
 
-class SqlConnRAII {};
+class SqlConnRAII {
+  public:
+    SqlConnRAII(MYSQL **sql_conn, SqlPool *sqlpool);
+    ~SqlConnRAII();
+
+  private:
+    MYSQL *sql_conn_raii;
+    SqlPool *sql_poll_raii;
+};
 
 #endif

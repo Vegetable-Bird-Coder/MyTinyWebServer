@@ -18,6 +18,9 @@ const char *error_500_title = "Internal Error";
 const char *error_500_form =
     "There was an unusual problem serving the request file.\n";
 
+std::map<std::string, std::string> HttpConn::m_users;
+locker HttpConn::m_lock;
+
 void HttpConn::init_mysql_result(SqlPool *sqlpool) {
     // 先从连接池中取一个连接
     MYSQL *mysql = NULL;
@@ -51,7 +54,7 @@ int HttpConn::m_epollfd = -1;
 void HttpConn::close_conn() {
     if (m_sockfd != -1) {
         printf("close %d\n", m_sockfd);
-        Utils.removefd(m_epollfd, m_sockfd);
+        Utils::removefd(m_epollfd, m_sockfd);
         m_sockfd = -1;
         m_user_count--;
     }
@@ -63,7 +66,7 @@ void HttpConn::init(int sockfd, const sockaddr_in &addr, char *root,
     m_sockfd = sockfd;
     m_address = addr;
 
-    Utils.addfd(m_epollfd, sockfd, true, trig_mode);
+    Utils::addfd(m_epollfd, sockfd, true, trig_mode);
     m_user_count++;
 
     // 当浏览器出现连接重置时，可能是网站根目录出错或http响应格式出错或者访问的文件中内容完全为空
@@ -325,7 +328,7 @@ HttpConn::HTTP_CODE HttpConn::do_request() {
             strcat(sql_insert, password);
             strcat(sql_insert, "')");
 
-            if (users.find(name) == users.end()) {
+            if (m_users.find(name) == m_users.end()) {
                 m_lock.lock();
                 int res = mysql_query(m_mysql, sql_insert);
                 m_users.insert(pair<string, string>(name, password));
@@ -341,7 +344,8 @@ HttpConn::HTTP_CODE HttpConn::do_request() {
         // 如果是登录，直接判断
         // 若浏览器端输入的用户名和密码在表中可以查找到，返回1，否则返回0
         else if (*(p + 1) == '2') {
-            if (users.find(name) != users.end() && users[name] == password)
+            if (m_users.find(name) != m_users.end() &&
+                m_users[name] == password)
                 strcpy(m_url, "/welcome.html");
             else
                 strcpy(m_url, "/logError.html");
@@ -408,7 +412,7 @@ bool HttpConn::write() {
     int temp = 0;
 
     if (bytes_to_send == 0) {
-        Utils.modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+        Utils::modfd(m_epollfd, m_sockfd, EPOLLIN, m_trig_mode);
         init_http_status();
         return true;
     }
@@ -418,7 +422,7 @@ bool HttpConn::write() {
 
         if (temp < 0) {
             if (errno == EAGAIN) {
-                Utils.modfd(m_epollfd, m_sockfd, EPOLLOUT, m_TRIGMode);
+                Utils::modfd(m_epollfd, m_sockfd, EPOLLOUT, m_trig_mode);
                 return true;
             }
             unmap();
@@ -438,7 +442,7 @@ bool HttpConn::write() {
 
         if (bytes_to_send <= 0) {
             unmap();
-            Utils.modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+            Utils::modfd(m_epollfd, m_sockfd, EPOLLIN, m_trig_mode);
 
             if (m_linger) {
                 init_http_status();
@@ -550,12 +554,12 @@ bool HttpConn::process_write(HTTP_CODE ret) {
 void HttpConn::process() {
     HTTP_CODE read_ret = process_read();
     if (read_ret == NO_REQUEST) {
-        Utils.modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
+        Utils::modfd(m_epollfd, m_sockfd, EPOLLIN, m_trig_mode);
         return;
     }
     bool write_ret = process_write(read_ret);
     if (!write_ret) {
         close_conn();
     }
-    Utils.modfd(m_epollfd, m_sockfd, EPOLLOUT, m_TRIGMode);
+    Utils::modfd(m_epollfd, m_sockfd, EPOLLOUT, m_trig_mode);
 }

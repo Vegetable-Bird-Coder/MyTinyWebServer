@@ -1,13 +1,16 @@
 #ifndef HTTP_CONNECTION_H
 #define HTTP_CONNECTION_H
 
+#include "../mysql/sql_conn_pool.h"
+#include "../timer/mytimer.h"
+#include <map>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
-
-#include "../mysql/sql_conn_pool.h"
-#include "../timer/mytimer.h"
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/uio.h>
 
 class HttpConn {
   public:
