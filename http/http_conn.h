@@ -2,8 +2,11 @@
 #define HTTP_CONNECTION_H
 
 #include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/epoll.h>
 
+#include "../mysql/sql_conn_pool.h"
 #include "../timer/mytimer.h"
 
 class HttpConn {
@@ -40,8 +43,8 @@ class HttpConn {
     enum LINE_STATUS { LINE_OK = 0, LINE_BAD, LINE_OPEN };
 
   public:
-    HttpConn();
-    ~HttpConn();
+    HttpConn(){};
+    ~HttpConn(){};
     void init(int sockfd, const sockaddr_in &addr, char *root,
               int conn_trig_mode, int close_log);
     void close_conn();
@@ -54,7 +57,7 @@ class HttpConn {
     int io_finish;
 
   private:
-    void init();
+    void init_http_status();
     HTTP_CODE process_read();
     bool process_write(HTTP_CODE ret);
     HTTP_CODE parse_request_line(char *text);
@@ -76,7 +79,7 @@ class HttpConn {
   public:
     static int m_epollfd;
     static int m_user_count;
-    MYSQL *mysql;
+    MYSQL *m_mysql;
     int m_state; // 读为0, 写为1
 
   private:
@@ -106,9 +109,9 @@ class HttpConn {
     int bytes_have_send;
     char *doc_root;
 
-    static locker locker;
+    static locker m_lock;
     static map<string, string> m_users;
-    int m_TRIGMode;
+    int m_trig_mode;
     int m_close_log;
 };
 
