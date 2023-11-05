@@ -108,5 +108,5 @@ SqlConnRAII::SqlConnRAII(MYSQL **sql_conn, SqlPool *sql_pool) {
 }
 
 SqlConnRAII::~SqlConnRAII() {
-    sql_poll_raii->release_connection(sql_conn_raii);
+    sql_pool_raii->release_connection(sql_conn_raii);
 }

@@ -48,7 +48,7 @@ class SqlConnRAII {
 
   private:
     MYSQL *sql_conn_raii;
-    SqlPool *sql_poll_raii;
+    SqlPool *sql_pool_raii;
 };
 
 #endif
