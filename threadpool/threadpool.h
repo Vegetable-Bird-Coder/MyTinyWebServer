@@ -43,11 +43,11 @@ ThreadPool<T>::ThreadPool(int actor_model, SqlPool *sql_pool, int thread_num,
     for (int i = 0; i < thread_num; i++) {
         if (pthread_create(m_threads + i, NULL, worker, this) != 0) {
             delete[] m_threads;
-            throw std::exception;
+            throw std::exception();
         }
         if (pthread_detach(m_threads[i])) {
             delete[] m_threads;
-            throw std::exception;
+            throw std::exception();
         }
     }
 }
@@ -62,7 +62,7 @@ template <typename T> bool ThreadPool<T>::append(T *request) {
     }
     m_workqueue.push_back(request);
     m_queue_locker.unlock();
-    m_queuestat.post();
+    m_queue_stat.post();
     return true;
 }
 
@@ -79,7 +79,7 @@ template <typename T> void *ThreadPool<T>::worker(void *arg) {
 
 template <typename T> void ThreadPool<T>::run() {
     while (true) {
-        m_queuestat.wait();
+        m_queue_stat.wait();
         m_queue_locker.lock();
         T *request = m_workqueue.front();
         m_workqueue.pop_front();
@@ -90,11 +90,13 @@ template <typename T> void ThreadPool<T>::run() {
             if (request->m_state == 0) {
                 if (request->read()) {
                     request->io_finish = true;
-                    SqlConnRAII sql_conn_raii(&request->sql_conn, m_sql_pool);
+                    SqlConnRAII sql_conn_raii(&request->m_mysql, m_sql_pool);
                     request->process();
                 } else {
-                    request->timer_flag = true; // 告诉主线程需要启用计时器回调函数
-                    request->io_finish = true; // 告诉主线程IO完成，因为reactor模式下，主线程不知道异步的IO是否成功
+                    request->timer_flag =
+                        true; // 告诉主线程需要启用计时器回调函数
+                    request->io_finish =
+                        true; // 告诉主线程IO完成，因为reactor模式下，主线程不知道异步的IO是否成功
                 }
             } else {
                 if (request->write()) {
@@ -105,7 +107,7 @@ template <typename T> void ThreadPool<T>::run() {
                 }
             }
         } else { // proactor
-            SqlConnRAII sql_conn_raii(&request->sql_conn, m_sql_pool);
+            SqlConnRAII sql_conn_raii(&request->m_mysql, m_sql_pool);
             request->process();
         }
     }
