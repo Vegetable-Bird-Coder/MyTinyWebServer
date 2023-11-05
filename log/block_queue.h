@@ -9,7 +9,7 @@ template <class T> class block_queue {
   public:
     block_queue(int max_size = 1000) {
         if (max_size <= 0) {
-            exit(-1);
+            throw std::exception();
         }
 
         m_max_size = max_size;
