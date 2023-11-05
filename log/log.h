@@ -2,7 +2,9 @@
 #define LOG_H
 
 #include "block_queue.h"
+#include <cstdarg>
 #include <stdio.h>
+#include <string.h>
 #include <string>
 
 using namespace std;
