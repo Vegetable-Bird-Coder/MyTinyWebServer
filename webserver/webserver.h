@@ -34,15 +34,15 @@ class WebServer {
     void trig_mode_init();
     void event_listen();
     void event_loop();
-    void timer_init();
+    void timer_init(int connfd, struct sockaddr_in client_address);
     // 连接期间有相应，更新计时器
-    void timer_update();
+    void timer_update(MyTimer *timer);
     // conn长时间未响应，需要断开连接
-    void timer_delete();
+    void timer_delete(MyTimer *timer, int sockfd);
     void deal_connection();
-    void deal_signal();
-    void deal_read();
-    void deal_write();
+    void deal_signal(bool &timeout, bool &stop_server);
+    void deal_read(int sockfd);
+    void deal_write(int sockfd);
 
   public:
     int m_port;
