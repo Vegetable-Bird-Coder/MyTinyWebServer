@@ -108,20 +108,21 @@ void WebServer::event_listen() {
     ret = listen(m_listenfd, 5);
     if (ret < 0)
         throw std::exception();
-    
+
     utils.init(TIMESLOT);
 
     m_epollfd = epoll_create(5);
     if (m_epollfd == -1)
         throw std::exception();
-    
+
     utils.addfd(m_epollfd, m_listenfd, false, m_listen_trig_mode);
     HttpConn::m_epollfd = m_epollfd;
 
     ret = socketpair(PF_UNIX, SOCK_STREAM, 0, m_pipefd);
     if (ret == -1)
         throw std::exception();
-    utils.set_nonblock(m_pipefd[1]); // 计时器到期之类任务没有那么紧急，因此读可以是非阻塞的
+    utils.set_nonblock(
+        m_pipefd[1]); // 计时器到期之类任务没有那么紧急，因此读可以是非阻塞的
     utils.addfd(m_epollfd, m_pipefd[0], false, 0);
 
     utils.addsig(SIGPIPE, SIG_IGN);
@@ -132,4 +133,12 @@ void WebServer::event_listen() {
 
     Utils::u_pipefd = m_pipefd;
     Utils::u_epollfd = m_epollfd;
+}
+
+void WebServer::timer_init(int connfd, struct sockaddr_in client_address) {
+    users[connfd].init(connfd, client_address, m_root, m_conn_trig_mode, m_close_log);
+
+    users_timer[connfd].address = client_address;
+    users_timer[connfd].sockfd = connfd;
+    ConnTimer *timer = new ConnTimer
 }
