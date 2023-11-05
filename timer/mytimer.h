@@ -1,11 +1,14 @@
 #ifndef MY_TIMER_H
 #define MY_TIMER_H
 
+#include <cassert>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <signal.h>
+#include <sys/epoll.h>
 #include <time.h>
-
+#include <unistd.h>
 class MyTimer;
 
 struct ConnTimer {
@@ -25,7 +28,7 @@ class MyTimer {
     ConnTimer *conn_timer;
     MyTimer *prev;
     MyTimer *next;
-}
+};
 
 class sort_timer_lst {
   public:
@@ -83,7 +86,7 @@ class Utils {
     static void addsig(int sig, void(handler)(int), bool restart = true);
 
     // 定时处理任务，重新定时以不断触发SIGALRM信号
-    static void timer_handler();
+    void timer_handler();
 
     static void show_error(int connfd, const char *info);
 

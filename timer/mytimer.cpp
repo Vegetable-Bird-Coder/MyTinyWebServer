@@ -178,7 +178,6 @@ void Utils::show_error(int connfd, const char *info) {
 int *Utils::m_pipefd = 0;
 int Utils::m_epollfd = 0;
 
-class Utils; // 在这里有什么用？
 void cb_func(ConnTimer *user_timer) {
     epoll_ctl(Utils::m_epollfd, EPOLL_CTL_DEL, user_timer->sockfd, 0);
     assert(user_timer);
