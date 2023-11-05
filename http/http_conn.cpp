@@ -441,7 +441,7 @@ bool HttpConn::write() {
             Utils.modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
 
             if (m_linger) {
-                init();
+                init_http_status();
                 return true;
             } else {
                 return false;
