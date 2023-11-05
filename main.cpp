@@ -2,9 +2,9 @@
 
 int main(int argc, char *argv[]) {
     // 需要修改的数据库信息,登录名,密码,库名
-    string user = "root";
-    string passwd = "root";
-    string databasename = "qgydb";
+    string user = "debian-sys-maint";
+    string passwd = "FAfUwKN7PI67Eigb";
+    string databasename = "webserverdb";
 
     // 命令行解析
     Config config;
@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     WebServer server;
 
     // 初始化
-    server.init(config.PORT, user, passwd, databasename, config.log_mode,
+    server.init(config.port, user, passwd, databasename, config.log_mode,
                 config.opt_linger, config.trig_mode, config.sql_num,
                 config.thread_num, config.close_log, config.actor_model);
 
